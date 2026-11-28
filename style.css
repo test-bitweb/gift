@@ -3,3 +3,21 @@
 @media(prefers-reduced-motion:reduce){.record,.petal{animation:none!important}}
 
 .cover-brand{position:absolute;bottom:55px;left:40px;right:40px;color:#ebd4ae;text-decoration:none;font:10px/1.8 "DM Sans",sans-serif;letter-spacing:2px;z-index:5}.cover-brand strong{display:block;font-size:25px;letter-spacing:1px;font-weight:500}.cover-brand:hover strong{text-decoration:underline}
+
+/* Mobile reader: full-width pages and accessible controls. */
+body{overflow-x:clip}#stage,#book{flex-shrink:0}
+.is-portrait #stage,.is-portrait .stf__block{touch-action:pan-y pinch-zoom}
+.is-portrait header{height:64px;gap:12px}
+.is-portrait .top-actions button{min-height:44px;font-size:14px;padding:8px}
+.is-portrait .reader{height:auto;min-height:64px;gap:7px;padding:8px 12px;flex-wrap:wrap}
+.is-portrait .reader button{min-height:44px;min-width:58px;padding:10px 12px;font-size:14px;border:1px solid #a8b4bd;border-radius:8px;background:#e3e8ec}
+.is-portrait #counter{font-size:13px;min-width:64px}
+.is-portrait .hint{font-size:12px;margin:2px 12px 10px;line-height:1.7}
+.is-portrait footer{font-size:10px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+.is-portrait .view{font-size:16px;min-height:48px;padding:10px 16px;bottom:14px}
+.is-portrait .page-btn{font-size:20px;min-height:54px;padding:12px 20px}
+.is-portrait .dreams button,.is-portrait .reason-list button{min-height:54px}
+.is-portrait .cover-brand{font-size:12px;bottom:48px;padding:8px 0}
+.is-portrait dialog{padding:20px;max-height:85dvh;overflow:auto}
+.is-portrait .dialog-head>button,.is-portrait .close-photo{min-width:44px;min-height:44px}
+.is-portrait #chapter-list button{font-size:16px;min-height:48px}

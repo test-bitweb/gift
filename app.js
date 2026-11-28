@@ -27,14 +27,29 @@ const pages=[
 ['cover back-cover',`<div style="font-size:70px;margin-bottom:30px">♡</div><h2 class="script">To be continued.</h2><p>AYAN & MIRA</p><p class="script" style="font-size:30px;margin-top:45px">Our best pages are still ahead.</p><a class="cover-brand" href="https://www.facebook.com/profile.php?id=61596515894049" target="_blank" rel="noopener">YOUR STORY, BEAUTIFULLY TOLD BY <strong>WebBunon</strong></a>`]
 ];
 const notes={smile:['That smile.','তোমার হাসি দেখলে খুব সাধারণ একটা দিনও মনে রাখার মতো হয়ে যায়।'],kind:['Your beautiful heart.','তুমি ছোট ছোট যত্নে মানুষকে ভালো থাকতে শেখাও। সেই মানুষটার প্রেমে প্রতিদিন নতুন করে পড়ি।'],ordinary:['Nothing special. Everything special.','একসঙ্গে চা খাওয়া, হাঁটা, বা চুপ করে বসে থাকা—তুমি থাকলেই সাধারণ সময়টাও আমার প্রিয় হয়ে যায়।'],home:['My safe place.','তোমার কাছে আমাকে অন্য কেউ সাজতে হয় না। আমি যেমন, তেমনভাবেই ভালোবাসা পাই।'],letter:['My favourite person,','তোমার জন্য বড় কিছু লিখতে বসে বারবার ছোট একটা কথাতেই ফিরে আসি—তুমি আছো বলে ভালো আছি। এই গল্পের প্রতিটি আগামী পাতায় তোমাকেই চাই। ♡'],date:['It’s a date!','একটা সন্ধ্যা শুধু আমাদের। তোমার পছন্দের খাবার, অনেকটা গল্প আর হাতে হাত রেখে হাঁটা। দিনটা আমরা দুজন মিলে ঠিক করব।']};
-let flip,resizeTimer;const dreams=new Set();const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let flip,resizeTimer,lastLayoutWidth=0,lastLayoutHeight=0,gesture=null;const dreams=new Set();const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function bookLayout(vw,vh){
+ const mobile=vw<760;
+ const w=Math.max(120,Math.floor(mobile?Math.min(vw-24,520):Math.min((vw-50)/2,(vh-170)*480/680,600)));
+ return {mobile,w,h:Math.round(w*680/480),stageWidth:mobile?w:2*w};
+}
+function swipeDirection(dx,dy){return Math.abs(dx)>=42&&Math.abs(dx)>=Math.abs(dy)*1.4?(dx<0?'next':'previous'):null;}
+function navigate(direction){
+ if(!flip||flip.getState()!=='read')return;
+ const i=flip.getCurrentPageIndex();
+ if(direction==='next'&&i<pages.length-1)flip.flipNext('bottom');
+ if(direction==='previous'&&i>0)flip.flipPrev('bottom');
+}
 function renderBook(start=0){
  if(flip){flip.destroy();flip=null;$('#stage').innerHTML='<div id="book"></div>';}
- const mobile=innerWidth<760;const width=Math.floor(Math.min(mobile?innerWidth-28:(innerWidth-50)/2,(innerHeight-155)*480/680,600));const w=Math.max(180,width),h=Math.round(w*680/480);
- $('#stage').style.cssText=`width:${mobile?w:2*w}px;height:${h}px;--page-scale:${w/480}`;
+ const {mobile,w,h,stageWidth}=bookLayout(innerWidth,innerHeight);
+ lastLayoutWidth=innerWidth;lastLayoutHeight=innerHeight;gesture=null;
+ document.body.classList.toggle('is-portrait',mobile);
+ $('#stage').style.cssText=`width:${stageWidth}px;height:${h}px;--page-scale:${w/480}`;
+ $('.hint').textContent=mobile?'Swipe left / right · পাতা উল্টাতে সোয়াইপ করুন':'Click a page or drag its corner · একটি পাতা খুলে দেখুন';
  $('#book').innerHTML=pages.map(([cls,html],i)=>`<section class="paper" ${i===0||i===21?'data-density="hard"':''} aria-label="Page ${i+1}"><div class="canvas ${cls}">${html}${i>0&&i<21?`<span class="page-num">${i+1}</span>`:''}</div></section>`).join('');
  if(!window.St){$('#stage').classList.add('list-mode');return;}
- flip=new St.PageFlip($('#book'),{width:w,height:h,size:'fixed',showCover:true,usePortrait:true,drawShadow:true,maxShadowOpacity:.5,flippingTime:reduced?1:1100,mobileScrollSupport:true,clickEventForward:true,useMouseEvents:true,showPageCorners:!reduced,disableFlipByClick:false,startPage:Math.min(start,21)});
+ flip=new St.PageFlip($('#book'),{width:w,height:h,size:'fixed',showCover:true,usePortrait:true,drawShadow:true,maxShadowOpacity:.5,flippingTime:reduced?1:1100,mobileScrollSupport:true,clickEventForward:true,useMouseEvents:true,showPageCorners:!mobile&&!reduced,disableFlipByClick:false,startPage:Math.min(start,21)});
  flip.on('flip',sync);flip.on('changeOrientation',sync);flip.loadFromHTML(document.querySelectorAll('.paper'));sync();syncMusic();
  document.querySelectorAll('[data-dream]').forEach(b=>b.setAttribute('aria-pressed',String(dreams.has(b.dataset.dream))));
 }
@@ -43,7 +58,7 @@ function syncMusic(){const playing=!$('#audio').paused;document.body.classList.t
 async function music(){const a=$('#audio');if(a.paused){try{a.volume=.4;await a.play();}catch{toast('Tap again to start the music.');}}else a.pause();syncMusic();}
 function toast(msg){$('#toast').textContent=msg;setTimeout(()=>$('#toast').textContent='',2600);}
 function celebrate(){if(reduced){toast('Here’s to your forever. ♡');return;}for(let i=0;i<45;i++){const el=document.createElement('span');el.className='petal';el.textContent=['♥','♡','✧'][i%3];el.style.cssText=`--size:${15+Math.random()*22}px;--left:${Math.random()*100}%;--duration:${3+Math.random()*3}s;--drift:${Math.random()*260-130}px;animation-delay:${Math.random()*.7}s`;$('#petals').append(el);el.addEventListener('animationend',()=>el.remove());}}
-$('#prev').onclick=()=>flip?.flipPrev('bottom');$('#next').onclick=()=>flip?.flipNext('bottom');$('#home').onclick=e=>{e.preventDefault();flip?.turnToPage(0);sync();};$('#music').onclick=music;
+$('#prev').onclick=()=>navigate('previous');$('#next').onclick=()=>navigate('next');$('#home').onclick=e=>{e.preventDefault();flip?.turnToPage(0);sync();};$('#music').onclick=music;
 $('#fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Full screen is not available in this browser.');}};
 const chapters=[['The cover',0],['A letter to you',1],['You + me',3],['Our story',5],['Coffee & rain',7],['Our forever',9],['Little reasons',11],['Our melody',13],['Favourite moments',14],['Someday dreams',16],['A small promise',17],['A date for two',18],['Celebrate us',20]];
 $('#chapter-list').innerHTML=chapters.map(([name,i])=>`<button data-page="${i}"><span>${name}</span><span>${i+1}</span></button>`).join('');$('#contents').onclick=()=>$('#chapter-dialog').showModal();
@@ -57,5 +72,32 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(b.dataset.dream){dreams.has(b.dataset.dream)?dreams.delete(b.dataset.dream):dreams.add(b.dataset.dream);b.setAttribute('aria-pressed',String(dreams.has(b.dataset.dream)));}
 });
 document.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]')||e.target.closest('button,a,input'))return;if(e.key==='ArrowRight'){e.preventDefault();flip?.flipNext('bottom');}if(e.key==='ArrowLeft'){e.preventDefault();flip?.flipPrev('bottom');}});
-window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>renderBook(flip?.getCurrentPageIndex()||0),200);});
+// Nested button and link content must not start a desktop page turn.
+for(const type of ['mousedown','touchstart']){
+ $('#stage').addEventListener(type,e=>{if(innerWidth<760||e.target.closest('button,a,input,select,textarea'))e.stopPropagation();},true);
+}
+// Phone gestures turn pages while vertical gestures remain normal scrolling.
+$('#stage').addEventListener('pointerdown',e=>{
+ if(innerWidth>=760||!e.isPrimary||e.button!==0||e.target.closest('button,a,input,select,textarea'))return;
+ gesture={x:e.clientX,y:e.clientY,id:e.pointerId};
+});
+$('#stage').addEventListener('pointerup',e=>{
+ if(!gesture||gesture.id!==e.pointerId)return;
+ const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;
+ const direction=swipeDirection(dx,dy);
+ if(direction){navigate(direction);return;}
+ if(Math.abs(dx)<10&&Math.abs(dy)<10){
+  const rect=$('#stage').getBoundingClientRect();
+  navigate(e.clientX-rect.left<rect.width*.35&&flip?.getCurrentPageIndex()>0?'previous':'next');
+ }
+});
+$('#stage').addEventListener('pointercancel',()=>{gesture=null;});
+window.addEventListener('resize',()=>{
+ clearTimeout(resizeTimer);
+ resizeTimer=setTimeout(()=>{
+  // Ignore address-bar/keyboard height changes on phones; retain the current page.
+  if(Math.abs(innerWidth-lastLayoutWidth)<2&&(innerWidth<760||Math.abs(innerHeight-lastLayoutHeight)<2))return;
+  renderBook(flip?.getCurrentPageIndex()||0);
+ },220);
+});
 renderBook();
