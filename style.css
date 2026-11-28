@@ -21,3 +21,8 @@ body{overflow-x:clip}#stage,#book{flex-shrink:0}
 .is-portrait dialog{padding:20px;max-height:85dvh;overflow:auto}
 .is-portrait .dialog-head>button,.is-portrait .close-photo{min-width:44px;min-height:44px}
 .is-portrait #chapter-list button{font-size:16px;min-height:48px}
+
+/* Page-curl geometry must never enlarge the document's scrollable area. */
+#stage:not(.list-mode){overflow:hidden;overflow:clip;contain:paint;isolation:isolate}
+/* Keep the reader width stable if genuine content needs vertical scrolling. */
+html{scrollbar-gutter:stable}
